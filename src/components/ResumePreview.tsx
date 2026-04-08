@@ -1,7 +1,9 @@
 "use client";
 
-import { ResumeData, Experience, Project, Education } from "@/schemas/resume";
+import { ResumeData } from "@/schemas/resume";
+import { ICONS } from "@/lib/icons";
 import { cn } from "@/lib/utils";
+import Avatar from "./Avatar";
 
 export type TemplateId = "classic" | "modern" | "compact";
 
@@ -44,38 +46,75 @@ function BulletList({ items }: { items: string[] }) {
   );
 }
 
+function SectionTitle({ title, className }: { title: string; className?: string }) {
+  return (
+    <h2 className={cn("uppercase tracking-tight", className)}>
+      {title}
+    </h2>
+  );
+}
+
+function ContactInfo({ 
+  fields, 
+  className, 
+  iconSize = 12 
+}: { 
+  fields: any[], 
+  className?: string, 
+  iconSize?: number 
+}) {
+  if (!fields || fields.length === 0) return null;
+  return (
+    <div className={className}>
+      {fields.map((f) => {
+        const Icon = f.icon_key ? (ICONS as any)[f.icon_key] : undefined;
+        return (
+          <span key={f.id} className="flex items-center gap-1 truncate">
+            {f.is_icon_visible && Icon ? <Icon size={iconSize} /> : null}
+            <span>{f.value || f.label}</span>
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
 function ClassicTemplate({ data }: { data: ResumeData }) {
   const { profile, summary, skills, experience, projects, education } = data;
   return (
     <div className="space-y-6 font-serif">
       <div className="text-center border-b-2 border-black pb-4">
+        {profile.avatar?.url && (
+          <div className="flex justify-center mb-4">
+            <Avatar avatar={profile.avatar} name={profile.name} />
+          </div>
+        )}
         <h1 className="text-3xl font-bold uppercase tracking-wider">{profile.name}</h1>
-        <div className="text-sm mt-2 flex justify-center gap-4 flex-wrap">
-          {profile.title && <span>{profile.title}</span>}
-          {profile.location && <span>{profile.location}</span>}
-          {profile.contacts?.email && <span>{profile.contacts.email}</span>}
-          {profile.contacts?.phone && <span>{profile.contacts.phone}</span>}
-        </div>
+        <ContactInfo 
+          fields={profile.contact_fields} 
+          className="text-sm mt-2 flex justify-center gap-4 flex-wrap"
+          iconSize={12}
+        />
       </div>
 
       {summary && (
         <section>
-          <h2 className="text-lg font-bold border-b border-gray-300 mb-2 uppercase tracking-tight">Summary</h2>
+          <SectionTitle title="Summary" className="text-lg font-bold border-b border-gray-300 mb-2" />
           <p className="text-sm leading-relaxed">{summary}</p>
         </section>
       )}
 
       {experience.length > 0 && (
         <section>
-          <h2 className="text-lg font-bold border-b border-gray-300 mb-2 uppercase tracking-tight">Experience</h2>
+          <SectionTitle title="Experience" className="text-lg font-bold border-b border-gray-300 mb-2" />
           <div className="space-y-4">
             {experience.map((exp, i) => (
               <div key={i} className="space-y-1">
-                <div className="flex justify-between font-bold">
+                <div className="flex justify-between font-bold text-sm">
                   <span>{exp.company}</span>
                   <span>{exp.startDate} - {exp.endDate || "Present"}</span>
                 </div>
-                <div className="italic text-sm">{exp.title}</div>
+                <div className="italic text-xs">{exp.title}</div>
                 <BulletList items={exp.description_optimized || exp.description_raw} />
               </div>
             ))}
@@ -85,11 +124,11 @@ function ClassicTemplate({ data }: { data: ResumeData }) {
 
       {projects.length > 0 && (
         <section>
-          <h2 className="text-lg font-bold border-b border-gray-300 mb-2 uppercase tracking-tight">Projects</h2>
+          <SectionTitle title="Projects" className="text-lg font-bold border-b border-gray-300 mb-2" />
           <div className="space-y-4">
             {projects.map((proj, i) => (
               <div key={i} className="space-y-1">
-                <div className="flex justify-between font-bold">
+                <div className="flex justify-between font-bold text-sm">
                   <span>{proj.name} {proj.role && `— ${proj.role}`}</span>
                   <span>{proj.startDate} - {proj.endDate}</span>
                 </div>
@@ -102,7 +141,7 @@ function ClassicTemplate({ data }: { data: ResumeData }) {
 
       {skills.length > 0 && (
         <section>
-          <h2 className="text-lg font-bold border-b border-gray-300 mb-2 uppercase tracking-tight">Skills</h2>
+          <SectionTitle title="Skills" className="text-lg font-bold border-b border-gray-300 mb-2" />
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
             {skills.map((skill, i) => (
               <span key={i}><span className="font-semibold">{skill.name}</span> ({skill.level})</span>
@@ -113,7 +152,7 @@ function ClassicTemplate({ data }: { data: ResumeData }) {
 
       {education.length > 0 && (
         <section>
-          <h2 className="text-lg font-bold border-b border-gray-300 mb-2 uppercase tracking-tight">Education</h2>
+          <SectionTitle title="Education" className="text-lg font-bold border-b border-gray-300 mb-2" />
           <div className="space-y-2">
             {education.map((edu, i) => (
               <div key={i} className="flex justify-between text-sm">
@@ -135,17 +174,23 @@ function ModernTemplate({ data }: { data: ResumeData }) {
   return (
     <div className="grid grid-cols-12 gap-8 font-sans h-full">
       <div className="col-span-4 bg-gray-50 -m-[15mm] p-[15mm] space-y-8">
-        <div>
+        <div className="relative">
+          {profile.avatar?.url && (
+            <div className="mb-4">
+              <Avatar avatar={profile.avatar} name={profile.name} />
+            </div>
+          )}
           <h1 className="text-2xl font-black text-blue-900 leading-tight uppercase">{profile.name}</h1>
           <p className="text-blue-700 font-medium mt-1">{profile.title}</p>
         </div>
 
         <div className="space-y-3 text-sm text-gray-600">
           <h3 className="font-bold text-gray-900 border-b pb-1">CONTACT</h3>
-          {profile.location && <p>{profile.location}</p>}
-          {profile.contacts?.email && <p>{profile.contacts.email}</p>}
-          {profile.contacts?.phone && <p>{profile.contacts.phone}</p>}
-          {profile.contacts?.github && <p className="truncate text-xs">{profile.contacts.github}</p>}
+          <ContactInfo 
+            fields={profile.contact_fields} 
+            className="space-y-1"
+            iconSize={12}
+          />
         </div>
 
         <div className="space-y-3 text-sm">
@@ -185,20 +230,20 @@ function ModernTemplate({ data }: { data: ResumeData }) {
       <div className="col-span-8 space-y-8">
         {summary && (
           <section className="space-y-3">
-            <h2 className="text-lg font-bold text-blue-900 flex items-center gap-2">
-              <span className="w-8 h-1 bg-blue-900 inline-block" />
-              ABOUT ME
-            </h2>
+            <SectionTitle 
+              title="ABOUT ME" 
+              className="text-lg font-bold text-blue-900 flex items-center gap-2 before:w-8 before:h-1 before:bg-blue-900 before:inline-block" 
+            />
             <p className="text-sm text-gray-700 leading-relaxed">{summary}</p>
           </section>
         )}
 
         {experience.length > 0 && (
           <section className="space-y-4">
-            <h2 className="text-lg font-bold text-blue-900 flex items-center gap-2">
-              <span className="w-8 h-1 bg-blue-900 inline-block" />
-              EXPERIENCE
-            </h2>
+            <SectionTitle 
+              title="EXPERIENCE" 
+              className="text-lg font-bold text-blue-900 flex items-center gap-2 before:w-8 before:h-1 before:bg-blue-900 before:inline-block" 
+            />
             <div className="space-y-6">
               {experience.map((exp, i) => (
                 <div key={i} className="relative pl-4 border-l-2 border-blue-100">
@@ -217,10 +262,10 @@ function ModernTemplate({ data }: { data: ResumeData }) {
 
         {projects.length > 0 && (
           <section className="space-y-4">
-            <h2 className="text-lg font-bold text-blue-900 flex items-center gap-2">
-              <span className="w-8 h-1 bg-blue-900 inline-block" />
-              PROJECTS
-            </h2>
+            <SectionTitle 
+              title="PROJECTS" 
+              className="text-lg font-bold text-blue-900 flex items-center gap-2 before:w-8 before:h-1 before:bg-blue-900 before:inline-block" 
+            />
             <div className="space-y-6">
               {projects.map((proj, i) => (
                 <div key={i} className="relative pl-4 border-l-2 border-blue-100">
@@ -246,23 +291,25 @@ function CompactTemplate({ data }: { data: ResumeData }) {
   return (
     <div className="text-[11px] leading-tight space-y-3 font-sans">
       <div className="flex justify-between items-end border-b-2 border-gray-800 pb-1">
-        <div>
+        <div className="flex items-center gap-3">
+          {profile.avatar?.url && (
+            <Avatar avatar={profile.avatar} name={profile.name} />
+          )}
           <h1 className="text-xl font-bold uppercase tracking-tight">{profile.name}</h1>
           <p className="font-medium text-gray-600 uppercase">{profile.title}</p>
         </div>
-        <div className="text-right flex flex-wrap justify-end gap-x-3 gap-y-0.5 max-w-[50%]">
-          {profile.location && <span>{profile.location}</span>}
-          {profile.contacts?.email && <span>{profile.contacts.email}</span>}
-          {profile.contacts?.phone && <span>{profile.contacts.phone}</span>}
-          {profile.contacts?.github && <span className="truncate">{profile.contacts.github}</span>}
-        </div>
+        <ContactInfo 
+          fields={profile.contact_fields} 
+          className="text-right flex flex-wrap justify-end gap-x-3 gap-y-0.5 max-w-[50%]"
+          iconSize={10}
+        />
       </div>
 
       <div className="grid grid-cols-4 gap-4">
         <div className="col-span-3 space-y-4">
           {experience.length > 0 && (
             <section>
-              <h2 className="font-bold border-b border-gray-400 mb-1 uppercase text-xs">Experience</h2>
+              <SectionTitle title="Experience" className="font-bold border-b border-gray-400 mb-1 text-xs" />
               <div className="space-y-3">
                 {experience.map((exp, i) => (
                   <div key={i}>
@@ -279,7 +326,7 @@ function CompactTemplate({ data }: { data: ResumeData }) {
 
           {projects.length > 0 && (
             <section>
-              <h2 className="font-bold border-b border-gray-400 mb-1 uppercase text-xs">Projects</h2>
+              <SectionTitle title="Projects" className="font-bold border-b border-gray-400 mb-1 text-xs" />
               <div className="space-y-2">
                 {projects.map((proj, i) => (
                   <div key={i}>
@@ -298,7 +345,7 @@ function CompactTemplate({ data }: { data: ResumeData }) {
         <div className="col-span-1 space-y-4">
           {skills.length > 0 && (
             <section>
-              <h2 className="font-bold border-b border-gray-400 mb-1 uppercase text-xs">Skills</h2>
+              <SectionTitle title="Skills" className="font-bold border-b border-gray-400 mb-1 text-xs" />
               <div className="space-y-1">
                 {skills.map((skill, i) => (
                   <div key={i} className="flex justify-between">
@@ -312,7 +359,7 @@ function CompactTemplate({ data }: { data: ResumeData }) {
 
           {education.length > 0 && (
             <section>
-              <h2 className="font-bold border-b border-gray-400 mb-1 uppercase text-xs">Education</h2>
+              <SectionTitle title="Education" className="font-bold border-b border-gray-400 mb-1 text-xs" />
               {education.map((edu, i) => (
                 <div key={i} className="mb-2">
                   <p className="font-bold">{edu.school}</p>

@@ -1,18 +1,23 @@
 import { z } from "zod";
 
-export const ContactSchema = z.object({
-  email: z.string().email().optional(),
-  phone: z.string().optional(),
-  github: z.string().url().optional(),
-  linkedin: z.string().url().optional(),
-  website: z.string().url().optional(),
+export const ContactFieldSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  value: z.string().optional(),
+  icon_key: z.string().optional(),
+  is_icon_visible: z.boolean().default(true),
+});
+
+export const AvatarConfigSchema = z.object({
+  url: z.string().url().optional(),
 });
 
 export const ProfileSchema = z.object({
   name: z.string().min(1, "Name is required"),
   title: z.string().optional(),
   location: z.string().optional(),
-  contacts: ContactSchema.optional(),
+  contact_fields: z.array(ContactFieldSchema).default([]),
+  avatar: AvatarConfigSchema.optional(),
 });
 
 export const SkillSchema = z.object({
@@ -67,3 +72,5 @@ export type Experience = z.infer<typeof ExperienceSchema>;
 export type Project = z.infer<typeof ProjectSchema>;
 export type Skill = z.infer<typeof SkillSchema>;
 export type Education = z.infer<typeof EducationSchema>;
+export type ContactField = z.infer<typeof ContactFieldSchema>;
+export type AvatarConfig = z.infer<typeof AvatarConfigSchema>;

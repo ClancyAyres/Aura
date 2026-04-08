@@ -7,6 +7,54 @@ import { cn } from "@/lib/utils";
 import { Plus, Trash2, Save, Wand2, Layout } from "lucide-react";
 import { useState, useEffect } from "react";
 import * as YAML from "yaml";
+import ContactManager from "./ContactManager";
+import Avatar from "./Avatar";
+
+// Shared Components to reduce boilerplate
+function FormSection({ 
+  title, 
+  children, 
+  action,
+  className 
+}: { 
+  title: string; 
+  children: React.ReactNode; 
+  action?: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <section className={cn("space-y-4", className)}>
+      <div className="flex justify-between items-center border-b pb-2">
+        <h2 className="text-xl font-semibold">{title}</h2>
+        {action}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function FieldCard({ 
+  onRemove, 
+  children,
+  className
+}: { 
+  onRemove: () => void; 
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={cn("p-4 border rounded-lg space-y-4 relative group bg-white hover:border-blue-200 transition-all shadow-sm", className)}>
+      <button
+        type="button"
+        onClick={onRemove}
+        className="absolute top-4 right-4 text-gray-300 hover:text-red-500 transition-colors"
+      >
+        <Trash2 size={18} />
+      </button>
+      {children}
+    </div>
+  );
+}
 
 export default function ResumeForm({ 
   initialData, 
@@ -24,16 +72,21 @@ export default function ResumeForm({
   const [importMode, setImportMode] = useState<"form" | "json" | "yaml">("form");
   const [importText, setImportText] = useState("");
 
-  const {
-    register,
-    control,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<ResumeData>({
+  const form = useForm<ResumeData>({
     resolver: zodResolver(ResumeSchema),
     defaultValues: initialData || {
-      profile: { name: "", title: "" },
+      profile: { 
+        name: "", 
+        title: "", 
+        avatar: { url: "" }, 
+        contact_fields: [
+          { id: "email", label: "Email", value: "", icon_key: "mail", is_icon_visible: true },
+          { id: "phone", label: "Phone", value: "", icon_key: "phone", is_icon_visible: true },
+          { id: "location", label: "Location", value: "", icon_key: "map-pin", is_icon_visible: true },
+          { id: "github", label: "GitHub", value: "", icon_key: "github", is_icon_visible: true },
+          { id: "linkedin", label: "LinkedIn", value: "", icon_key: "linkedin", is_icon_visible: true },
+        ] 
+      },
       summary: "",
       skills: [],
       experience: [],
@@ -41,6 +94,16 @@ export default function ResumeForm({
       education: [],
     },
   });
+
+  const {
+    register,
+    control,
+    handleSubmit,
+    reset,
+    setValue,
+    watch,
+    formState: { errors },
+  } = form;
 
   // Watch all fields for real-time preview
   const watchedData = useWatch({ control });
@@ -95,9 +158,7 @@ export default function ResumeForm({
       const { optimized, error } = await res.json();
       if (error) throw new Error(error);
       
-      const newExperience = [...(watchedData.experience || [])];
-      newExperience[index] = { ...exp, description_optimized: optimized };
-      reset({ ...watchedData, experience: newExperience });
+      setValue(`experience.${index}.description_optimized`, optimized, { shouldDirty: true });
     } catch (e) {
       alert("Failed to optimize: " + (e as Error).message);
     } finally {
@@ -215,22 +276,29 @@ export default function ResumeForm({
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-sm font-medium">Email</label>
+                <label className="text-sm font-medium">Upload Avatar</label>
                 <input
-                  {...register("profile.contacts.email")}
-                  className="w-full p-2 border rounded focus:ring-1 focus:ring-blue-500 outline-none"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-sm font-medium">Location</label>
-                <input
-                  {...register("profile.location")}
-                  placeholder="City, Country"
-                  className="w-full p-2 border rounded focus:ring-1 focus:ring-blue-500 outline-none"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const url = URL.createObjectURL(file);
+                      setValue("profile.avatar.url", url, { shouldDirty: true });
+                    }
+                  }}
+                  className="w-full text-sm"
                 />
               </div>
             </div>
+            <div className="pt-2">
+              <div className="inline-block">
+                <Avatar avatar={watchedData.profile?.avatar} name={watchedData.profile?.name || ""} />
+              </div>
+            </div>
           </section>
+
+          <ContactManager form={form} />
 
           {/* Summary Section */}
           <section className="space-y-4">
@@ -244,91 +312,76 @@ export default function ResumeForm({
           </section>
 
           {/* Experience Section */}
-          <section className="space-y-6">
-            <div className="flex justify-between items-center border-b pb-2">
-              <h2 className="text-xl font-semibold">Experience</h2>
+          <FormSection 
+            title="Experience" 
+            action={
               <button
                 type="button"
                 onClick={() => appendExperience({ company: "", title: "", startDate: "", tech: [], description_raw: [] })}
-                className="text-blue-600 hover:text-blue-800 flex items-center gap-1 text-sm"
+                className="text-blue-600 hover:text-blue-800 flex items-center gap-1 text-sm font-medium"
               >
                 <Plus size={16} /> Add Experience
               </button>
-            </div>
-            
+            }
+          >
             <div className="space-y-8">
               {experienceFields.map((field, index) => (
-                <div key={field.id} className="p-4 border rounded-lg space-y-4 relative group">
-                  <button
-                    type="button"
-                    onClick={() => removeExperience(index)}
-                    className="absolute top-4 right-4 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                  
+                <FieldCard key={field.id} onRemove={() => removeExperience(index)}>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="text-xs font-medium uppercase text-gray-500">Company</label>
+                      <label className="text-xs font-bold uppercase text-gray-400">Company</label>
                       <input
                         {...register(`experience.${index}.company`)}
-                        className="w-full p-2 border rounded text-sm"
+                        className="w-full p-2 border rounded text-sm focus:border-blue-500 outline-none"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-xs font-medium uppercase text-gray-500">Title</label>
+                      <label className="text-xs font-bold uppercase text-gray-400">Title</label>
                       <input
                         {...register(`experience.${index}.title`)}
-                        className="w-full p-2 border rounded text-sm"
+                        className="w-full p-2 border rounded text-sm focus:border-blue-500 outline-none"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-xs font-medium uppercase text-gray-500">Start Date</label>
+                      <label className="text-xs font-bold uppercase text-gray-400">Start Date</label>
                       <input
                         {...register(`experience.${index}.startDate`)}
                         placeholder="YYYY-MM"
-                        className="w-full p-2 border rounded text-sm"
+                        className="w-full p-2 border rounded text-sm focus:border-blue-500 outline-none"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-xs font-medium uppercase text-gray-500">End Date</label>
+                      <label className="text-xs font-bold uppercase text-gray-400">End Date</label>
                       <input
                         {...register(`experience.${index}.endDate`)}
                         placeholder="YYYY-MM or Present"
-                        className="w-full p-2 border rounded text-sm"
+                        className="w-full p-2 border rounded text-sm focus:border-blue-500 outline-none"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs font-medium uppercase text-gray-500">Description (Raw)</label>
+                    <label className="text-xs font-bold uppercase text-gray-400">Description (Raw)</label>
                     <textarea
                       rows={3}
                       placeholder="One point per line"
-                      className="w-full p-2 border rounded text-sm font-mono"
+                      className="w-full p-2 border rounded text-sm font-mono focus:border-blue-500 outline-none"
                       defaultValue={field.description_raw.join("\n")}
                       onChange={(e) => {
                         const lines = e.target.value.split("\n").filter(l => l.trim());
-                        const newExperience = [...(watchedData.experience || [])];
-                        newExperience[index] = { ...newExperience[index], description_raw: lines };
-                        // We use reset with { keepDefaultValues: true } to avoid unnecessary re-renders of the whole form
-                        // but actually, since we are using useWatch, updating the data is important.
-                        // However, react-hook-form field arrays work better with setValue.
+                        setValue(`experience.${index}.description_raw`, lines, { shouldDirty: true });
                       }}
-                      // Using setValue for specific field is cleaner than reset
                       onBlur={(e) => {
                         const lines = e.target.value.split("\n").filter(l => l.trim());
-                        const fieldName = `experience.${index}.description_raw` as const;
-                        // @ts-ignore
-                        control._setValue(fieldName, lines);
+                        setValue(`experience.${index}.description_raw`, lines, { shouldDirty: true });
                       }}
                     />
                   </div>
 
                   {field.description_optimized && (
                     <div className="space-y-1">
-                      <label className="text-xs font-medium uppercase text-blue-500">Description (Optimized)</label>
-                      <div className="bg-blue-50 p-3 rounded text-sm space-y-1">
+                      <label className="text-xs font-bold uppercase text-blue-500">Description (Optimized)</label>
+                      <div className="bg-blue-50 p-3 rounded text-sm space-y-1 border border-blue-100">
                         {field.description_optimized.map((line, i) => (
                           <div key={i} className="flex gap-2">
                             <span>•</span>
@@ -344,165 +397,148 @@ export default function ResumeForm({
                     onClick={() => handleOptimize(index)}
                     disabled={isOptimizing === index}
                     className={cn(
-                      "flex items-center gap-1 text-xs px-3 py-1 rounded transition-colors",
+                      "flex items-center gap-1 text-xs px-3 py-1.5 rounded-full transition-all font-medium",
                       isOptimizing === index 
                         ? "bg-gray-100 text-gray-400 cursor-not-allowed" 
-                        : "bg-purple-50 text-purple-700 hover:bg-purple-100"
+                        : "bg-purple-50 text-purple-700 hover:bg-purple-600 hover:text-white"
                     )}
                   >
                     <Wand2 size={12} className={isOptimizing === index ? "animate-spin" : ""} />
                     {isOptimizing === index ? "Optimizing..." : "Optimize with AI (STAR)"}
                   </button>
-                </div>
+                </FieldCard>
               ))}
             </div>
-          </section>
+          </FormSection>
 
           {/* Projects Section */}
-          <section className="space-y-6">
-            <div className="flex justify-between items-center border-b pb-2">
-              <h2 className="text-xl font-semibold">Projects</h2>
+          <FormSection 
+            title="Projects"
+            action={
               <button
                 type="button"
                 onClick={() => appendProject({ name: "", description_raw: [], tech: [] })}
-                className="text-blue-600 hover:text-blue-800 flex items-center gap-1 text-sm"
+                className="text-blue-600 hover:text-blue-800 flex items-center gap-1 text-sm font-medium"
               >
                 <Plus size={16} /> Add Project
               </button>
-            </div>
-            
+            }
+          >
             <div className="space-y-8">
               {projectFields.map((field, index) => (
-                <div key={field.id} className="p-4 border rounded-lg space-y-4 relative group">
-                  <button
-                    type="button"
-                    onClick={() => removeProject(index)}
-                    className="absolute top-4 right-4 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                  
+                <FieldCard key={field.id} onRemove={() => removeProject(index)}>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="text-xs font-medium uppercase text-gray-500">Project Name</label>
+                      <label className="text-xs font-bold uppercase text-gray-400">Project Name</label>
                       <input
                         {...register(`projects.${index}.name`)}
-                        className="w-full p-2 border rounded text-sm"
+                        className="w-full p-2 border rounded text-sm focus:border-blue-500 outline-none"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-xs font-medium uppercase text-gray-500">Role</label>
+                      <label className="text-xs font-bold uppercase text-gray-400">Role</label>
                       <input
                         {...register(`projects.${index}.role`)}
-                        className="w-full p-2 border rounded text-sm"
+                        className="w-full p-2 border rounded text-sm focus:border-blue-500 outline-none"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs font-medium uppercase text-gray-500">Description (Raw)</label>
+                    <label className="text-xs font-bold uppercase text-gray-400">Description (Raw)</label>
                     <textarea
                       rows={2}
                       placeholder="One point per line"
-                      className="w-full p-2 border rounded text-sm font-mono"
+                      className="w-full p-2 border rounded text-sm font-mono focus:border-blue-500 outline-none"
                       defaultValue={field.description_raw.join("\n")}
                       onBlur={(e) => {
                         const lines = e.target.value.split("\n").filter(l => l.trim());
-                        const fieldName = `projects.${index}.description_raw` as const;
-                        // @ts-ignore
-                        control._setValue(fieldName, lines);
+                        setValue(`projects.${index}.description_raw`, lines, { shouldDirty: true });
                       }}
                     />
                   </div>
-                </div>
+                </FieldCard>
               ))}
             </div>
-          </section>
+          </FormSection>
 
           {/* Education Section */}
-          <section className="space-y-6">
-            <div className="flex justify-between items-center border-b pb-2">
-              <h2 className="text-xl font-semibold">Education</h2>
+          <FormSection 
+            title="Education"
+            action={
               <button
                 type="button"
                 onClick={() => appendEducation({ school: "", degree: "", startDate: "" })}
-                className="text-blue-600 hover:text-blue-800 flex items-center gap-1 text-sm"
+                className="text-blue-600 hover:text-blue-800 flex items-center gap-1 text-sm font-medium"
               >
                 <Plus size={16} /> Add Education
               </button>
-            </div>
-            
+            }
+          >
             <div className="space-y-6">
               {educationFields.map((field, index) => (
-                <div key={field.id} className="p-4 border rounded-lg space-y-4 relative group">
-                  <button
-                    type="button"
-                    onClick={() => removeEducation(index)}
-                    className="absolute top-4 right-4 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                  
+                <FieldCard key={field.id} onRemove={() => removeEducation(index)}>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1 col-span-2">
-                      <label className="text-xs font-medium uppercase text-gray-500">School</label>
+                      <label className="text-xs font-bold uppercase text-gray-400">School</label>
                       <input
                         {...register(`education.${index}.school`)}
-                        className="w-full p-2 border rounded text-sm"
+                        className="w-full p-2 border rounded text-sm focus:border-blue-500 outline-none"
                       />
                     </div>
                     <div className="space-y-1 col-span-2">
-                      <label className="text-xs font-medium uppercase text-gray-500">Degree</label>
+                      <label className="text-xs font-bold uppercase text-gray-400">Degree</label>
                       <input
                         {...register(`education.${index}.degree`)}
-                        className="w-full p-2 border rounded text-sm"
+                        className="w-full p-2 border rounded text-sm focus:border-blue-500 outline-none"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-xs font-medium uppercase text-gray-500">Start Date</label>
+                      <label className="text-xs font-bold uppercase text-gray-400">Start Date</label>
                       <input
                         {...register(`education.${index}.startDate`)}
                         placeholder="YYYY-MM"
-                        className="w-full p-2 border rounded text-sm"
+                        className="w-full p-2 border rounded text-sm focus:border-blue-500 outline-none"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-xs font-medium uppercase text-gray-500">End Date</label>
+                      <label className="text-xs font-bold uppercase text-gray-400">End Date</label>
                       <input
                         {...register(`education.${index}.endDate`)}
                         placeholder="YYYY-MM"
-                        className="w-full p-2 border rounded text-sm"
+                        className="w-full p-2 border rounded text-sm focus:border-blue-500 outline-none"
                       />
                     </div>
                   </div>
-                </div>
+                </FieldCard>
               ))}
             </div>
-          </section>
+          </FormSection>
 
           {/* Skills Section */}
-          <section className="space-y-4">
-            <div className="flex justify-between items-center border-b pb-2">
-              <h2 className="text-xl font-semibold">Skills</h2>
+          <FormSection 
+            title="Skills"
+            action={
               <button
                 type="button"
                 onClick={() => appendSkill({ name: "", level: "intermediate" })}
-                className="text-blue-600 hover:text-blue-800 flex items-center gap-1 text-sm"
+                className="text-blue-600 hover:text-blue-800 flex items-center gap-1 text-sm font-medium"
               >
                 <Plus size={16} /> Add Skill
               </button>
-            </div>
-            <div className="flex flex-wrap gap-2">
+            }
+          >
+            <div className="flex flex-wrap gap-3">
               {skillFields.map((field, index) => (
-                <div key={field.id} className="flex items-center gap-1 bg-gray-100 px-3 py-1 rounded-full group">
+                <div key={field.id} className="flex items-center gap-1 bg-white border border-gray-200 px-3 py-1.5 rounded-full group hover:border-blue-400 transition-all shadow-sm">
                   <input
                     {...register(`skills.${index}.name`)}
-                    className="bg-transparent border-none focus:ring-0 text-sm w-24 outline-none"
+                    className="bg-transparent border-none focus:ring-0 text-sm w-24 outline-none font-medium"
                     placeholder="Skill name"
                   />
                   <select
                     {...register(`skills.${index}.level`)}
-                    className="bg-transparent border-none focus:ring-0 text-[10px] text-gray-500 uppercase outline-none"
+                    className="bg-transparent border-none focus:ring-0 text-[10px] text-gray-400 uppercase outline-none font-bold cursor-pointer hover:text-blue-600 transition-colors"
                   >
                     <option value="beginner">Beg</option>
                     <option value="intermediate">Int</option>
@@ -512,14 +548,14 @@ export default function ResumeForm({
                   <button
                     type="button"
                     onClick={() => removeSkill(index)}
-                    className="text-gray-400 hover:text-red-500 ml-1"
+                    className="text-gray-300 hover:text-red-500 ml-1 transition-colors"
                   >
                     <Trash2 size={14} />
                   </button>
                 </div>
               ))}
             </div>
-          </section>
+          </FormSection>
         </form>
       )}
     </div>
