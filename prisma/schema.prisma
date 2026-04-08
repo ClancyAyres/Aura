@@ -1,0 +1,39 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Resume {
+  id        String    @id @default(cuid())
+  userId    String?
+  title     String
+  data      String    // JSON string of the resume data
+  versions  Version[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Version {
+  id              String   @id @default(cuid())
+  resumeId        String
+  resume          Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  label           String
+  targetRole      String?
+  jdSnapshot      String?  // JSON string of the JD
+  llmParams       String?  // JSON string of the LLM parameters
+  data            String   // JSON string of the optimized resume data
+  createdAt       DateTime @default(now())
+}
+
+model Template {
+  id            String   @id @default(cuid())
+  name          String
+  engine        String   // e.g., "html", "markdown"
+  paramsSchema  String?  // JSON schema for template parameters
+  content       String   // Template content (HTML/Handlebars/etc.)
+  createdAt     DateTime @default(now())
+}
