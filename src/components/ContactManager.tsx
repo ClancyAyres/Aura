@@ -37,8 +37,8 @@ function IconPicker({
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex items-center justify-center gap-2 p-2 border rounded text-sm focus:border-blue-500 outline-none transition-all h-[38px] bg-white hover:bg-gray-50 border-gray-200"
       >
-        <Icon size={18} className="text-blue-600" />
-        <ChevronDown size={14} className={cn("text-gray-400 transition-transform", isOpen && "rotate-180")} />
+        <Icon size={16} className="text-blue-600" />
+        <ChevronDown size={12} className={cn("text-gray-400 transition-transform", isOpen && "rotate-180")} />
       </button>
 
       {isOpen && (
@@ -54,14 +54,14 @@ function IconPicker({
                   setIsOpen(false);
                 }}
                 className={cn(
-                  "p-2.5 rounded flex items-center justify-center transition-all",
+                  "p-2 rounded flex items-center justify-center transition-all",
                   value === opt.key 
                     ? "bg-blue-50 text-blue-600 ring-1 ring-blue-200" 
                     : "text-gray-500 hover:bg-gray-50 hover:text-blue-600"
                 )}
                 title={opt.label}
               >
-                <OptIcon size={20} />
+                <OptIcon size={16} />
               </button>
             );
           })}
@@ -146,7 +146,7 @@ export default function ContactManager({
                     {(() => {
                       const opt = ICON_OPTIONS.find(o => o.key === data?.[i]?.icon_key);
                       const Icon = opt?.Component;
-                      return Icon ? <Icon size={18} /> : null;
+                      return Icon ? <Icon size={14} /> : null;
                     })()}
                   </div>
                 ) : (
@@ -190,4 +190,3 @@ export default function ContactManager({
     </section>
   );
 }
-

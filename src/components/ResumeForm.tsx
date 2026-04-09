@@ -1,10 +1,11 @@
 "use client";
 
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
+import type { UseFormRegisterReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ResumeSchema, ResumeData } from "@/schemas/resume";
 import { cn } from "@/lib/utils";
-import { Plus, Trash2, Save, Wand2, Layout, Upload, X } from "lucide-react";
+import { Plus, Trash2, Save, Wand2, Layout, Upload, X, Loader2 } from "lucide-react";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import * as YAML from "yaml";
 import ContactManager from "./ContactManager";
@@ -55,6 +56,118 @@ function FieldCard({
   );
 }
 
+function SchoolAutocompleteInput({
+  registerReturn,
+  value,
+  onValueChange,
+  cacheRef,
+}: {
+  registerReturn: UseFormRegisterReturn;
+  value: string;
+  onValueChange: (val: string) => void;
+  cacheRef: React.MutableRefObject<Map<string, string[]>>;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [options, setOptions] = useState<string[]>([]);
+  const abortRef = useRef<AbortController | null>(null);
+  const debounceRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const q = value.trim();
+    if (q.length < 2) {
+      setOptions([]);
+      setIsLoading(false);
+      abortRef.current?.abort();
+      return;
+    }
+
+    if (debounceRef.current) window.clearTimeout(debounceRef.current);
+    debounceRef.current = window.setTimeout(async () => {
+      const cached = cacheRef.current.get(q.toLowerCase());
+      if (cached) {
+        setOptions(cached);
+        setIsLoading(false);
+        return;
+      }
+
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
+      setIsLoading(true);
+      try {
+        const res = await fetch(`/api/schools?q=${encodeURIComponent(q)}`, {
+          signal: controller.signal,
+        });
+        const json = await res.json();
+        const names = Array.isArray(json?.schools)
+          ? json.schools
+              .map((s: any) => (typeof s?.name === "string" ? s.name : ""))
+              .filter(Boolean)
+              .slice(0, 8)
+          : [];
+        cacheRef.current.set(q.toLowerCase(), names);
+        setOptions(names);
+      } catch {
+        setOptions([]);
+      } finally {
+        setIsLoading(false);
+      }
+    }, 250);
+
+    return () => {
+      if (debounceRef.current) window.clearTimeout(debounceRef.current);
+    };
+  }, [value, isOpen, cacheRef]);
+
+  return (
+    <div className="relative">
+      <div className="relative">
+        <input
+          {...registerReturn}
+          value={value}
+          onChange={(e) => {
+            registerReturn.onChange(e);
+            onValueChange(e.target.value);
+            setIsOpen(true);
+          }}
+          onFocus={() => setIsOpen(true)}
+          onBlur={(e) => {
+            registerReturn.onBlur(e);
+            window.setTimeout(() => setIsOpen(false), 120);
+          }}
+          placeholder="Type to search, or enter your school"
+          className="w-full p-2 pr-9 border rounded text-sm focus:border-blue-500 outline-none"
+          autoComplete="off"
+        />
+        <div className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400">
+          {isLoading ? <Loader2 size={16} className="animate-spin" /> : null}
+        </div>
+      </div>
+
+      {isOpen && options.length > 0 && (
+        <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-xl overflow-hidden">
+          {options.map((name) => (
+            <button
+              key={name}
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                onValueChange(name);
+                setIsOpen(false);
+              }}
+              className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
+            >
+              {name}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ResumeForm({ 
   initialData, 
   onSave,
@@ -72,6 +185,7 @@ export default function ResumeForm({
   const [importText, setImportText] = useState("");
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [avatarFileName, setAvatarFileName] = useState("");
+  const schoolCacheRef = useRef<Map<string, string[]>>(new Map());
 
   const form = useForm<ResumeData>({
     resolver: zodResolver(ResumeSchema),
@@ -102,7 +216,6 @@ export default function ResumeForm({
     handleSubmit,
     reset,
     setValue,
-    watch,
     formState: { errors },
   } = form;
 
@@ -510,9 +623,11 @@ export default function ResumeForm({
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1 col-span-2">
                       <label className="text-xs font-bold uppercase text-gray-400">School</label>
-                      <input
-                        {...register(`education.${index}.school`)}
-                        className="w-full p-2 border rounded text-sm focus:border-blue-500 outline-none"
+                      <SchoolAutocompleteInput
+                        registerReturn={register(`education.${index}.school`)}
+                        value={watchedData.education?.[index]?.school || ""}
+                        onValueChange={(val) => setValue(`education.${index}.school`, val, { shouldDirty: true })}
+                        cacheRef={schoolCacheRef}
                       />
                     </div>
                     <div className="space-y-1 col-span-2">

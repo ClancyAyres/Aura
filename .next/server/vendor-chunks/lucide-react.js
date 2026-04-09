@@ -91,6 +91,16 @@ eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpac
 
 /***/ }),
 
+/***/ "(ssr)/./node_modules/lucide-react/dist/esm/icons/loader-2.js":
+/*!**************************************************************!*\
+  !*** ./node_modules/lucide-react/dist/esm/icons/loader-2.js ***!
+  \**************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   \"default\": () => (/* binding */ Loader2)\n/* harmony export */ });\n/* harmony import */ var _createLucideIcon_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../createLucideIcon.js */ \"(ssr)/./node_modules/lucide-react/dist/esm/createLucideIcon.js\");\n/**\n * @license lucide-react v0.330.0 - ISC\n *\n * This source code is licensed under the ISC license.\n * See the LICENSE file in the root directory of this source tree.\n */ \nconst Loader2 = (0,_createLucideIcon_js__WEBPACK_IMPORTED_MODULE_0__[\"default\"])(\"Loader2\", [\n    [\n        \"path\",\n        {\n            d: \"M21 12a9 9 0 1 1-6.219-8.56\",\n            key: \"13zald\"\n        }\n    ]\n]);\n //# sourceMappingURL=loader-2.js.map\n//# sourceURL=[module]\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiKHNzcikvLi9ub2RlX21vZHVsZXMvbHVjaWRlLXJlYWN0L2Rpc3QvZXNtL2ljb25zL2xvYWRlci0yLmpzIiwibWFwcGluZ3MiOiI7Ozs7O0FBQUE7Ozs7O0NBS0MsR0FFcUQ7QUFFdEQsTUFBTUMsVUFBVUQsZ0VBQWdCQSxDQUFDLFdBQVc7SUFDMUM7UUFBQztRQUFRO1lBQUVFLEdBQUc7WUFBK0JDLEtBQUs7UUFBUztLQUFFO0NBQzlEO0FBRTZCLENBQzlCLG9DQUFvQyIsInNvdXJjZXMiOlsid2VicGFjazovL2F1cmEtcmVzdW1lLWdlbmVyYXRvci8uL25vZGVfbW9kdWxlcy9sdWNpZGUtcmVhY3QvZGlzdC9lc20vaWNvbnMvbG9hZGVyLTIuanM/MTFmNSJdLCJzb3VyY2VzQ29udGVudCI6WyIvKipcbiAqIEBsaWNlbnNlIGx1Y2lkZS1yZWFjdCB2MC4zMzAuMCAtIElTQ1xuICpcbiAqIFRoaXMgc291cmNlIGNvZGUgaXMgbGljZW5zZWQgdW5kZXIgdGhlIElTQyBsaWNlbnNlLlxuICogU2VlIHRoZSBMSUNFTlNFIGZpbGUgaW4gdGhlIHJvb3QgZGlyZWN0b3J5IG9mIHRoaXMgc291cmNlIHRyZWUuXG4gKi9cblxuaW1wb3J0IGNyZWF0ZUx1Y2lkZUljb24gZnJvbSAnLi4vY3JlYXRlTHVjaWRlSWNvbi5qcyc7XG5cbmNvbnN0IExvYWRlcjIgPSBjcmVhdGVMdWNpZGVJY29uKFwiTG9hZGVyMlwiLCBbXG4gIFtcInBhdGhcIiwgeyBkOiBcIk0yMSAxMmE5IDkgMCAxIDEtNi4yMTktOC41NlwiLCBrZXk6IFwiMTN6YWxkXCIgfV1cbl0pO1xuXG5leHBvcnQgeyBMb2FkZXIyIGFzIGRlZmF1bHQgfTtcbi8vIyBzb3VyY2VNYXBwaW5nVVJMPWxvYWRlci0yLmpzLm1hcFxuIl0sIm5hbWVzIjpbImNyZWF0ZUx1Y2lkZUljb24iLCJMb2FkZXIyIiwiZCIsImtleSIsImRlZmF1bHQiXSwic291cmNlUm9vdCI6IiJ9\n//# sourceURL=webpack-internal:///(ssr)/./node_modules/lucide-react/dist/esm/icons/loader-2.js\n");
+
+/***/ }),
+
 /***/ "(ssr)/./node_modules/lucide-react/dist/esm/icons/mail.js":
 /*!**********************************************************!*\
   !*** ./node_modules/lucide-react/dist/esm/icons/mail.js ***!

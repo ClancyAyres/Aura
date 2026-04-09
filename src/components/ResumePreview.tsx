@@ -93,7 +93,7 @@ function ClassicTemplate({ data }: { data: ResumeData }) {
         <ContactInfo 
           fields={profile.contact_fields} 
           className="text-sm mt-2 flex justify-center gap-4 flex-wrap"
-          iconSize={12}
+          iconSize={10}
         />
       </div>
 
@@ -189,7 +189,7 @@ function ModernTemplate({ data }: { data: ResumeData }) {
           <ContactInfo 
             fields={profile.contact_fields} 
             className="space-y-1"
-            iconSize={12}
+            iconSize={10}
           />
         </div>
 
@@ -301,7 +301,7 @@ function CompactTemplate({ data }: { data: ResumeData }) {
         <ContactInfo 
           fields={profile.contact_fields} 
           className="text-right flex flex-wrap justify-end gap-x-3 gap-y-0.5 max-w-[50%]"
-          iconSize={10}
+          iconSize={9}
         />
       </div>
 
