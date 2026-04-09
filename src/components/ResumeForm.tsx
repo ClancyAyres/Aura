@@ -4,13 +4,12 @@ import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ResumeSchema, ResumeData } from "@/schemas/resume";
 import { cn } from "@/lib/utils";
-import { Plus, Trash2, Save, Wand2, Layout } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Plus, Trash2, Save, Wand2, Layout, Upload, X } from "lucide-react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import * as YAML from "yaml";
 import ContactManager from "./ContactManager";
 import Avatar from "./Avatar";
 
-// Shared Components to reduce boilerplate
 function FormSection({ 
   title, 
   children, 
@@ -18,8 +17,8 @@ function FormSection({
   className 
 }: { 
   title: string; 
-  children: React.ReactNode; 
-  action?: React.ReactNode;
+  children: ReactNode; 
+  action?: ReactNode;
   className?: string;
 }) {
   return (
@@ -39,7 +38,7 @@ function FieldCard({
   className
 }: { 
   onRemove: () => void; 
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
 }) {
   return (
@@ -71,6 +70,8 @@ export default function ResumeForm({
 }) {
   const [importMode, setImportMode] = useState<"form" | "json" | "yaml">("form");
   const [importText, setImportText] = useState("");
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [avatarFileName, setAvatarFileName] = useState("");
 
   const form = useForm<ResumeData>({
     resolver: zodResolver(ResumeSchema),
@@ -275,20 +276,48 @@ export default function ResumeForm({
                   className="w-full p-2 border rounded focus:ring-1 focus:ring-blue-500 outline-none"
                 />
               </div>
-              <div className="space-y-1">
-                <label className="text-sm font-medium">Upload Avatar</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
+              <div className="space-y-2 col-span-2">
+                <label className="text-sm font-medium">Avatar</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    ref={avatarInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setAvatarFileName(file.name);
                       const url = URL.createObjectURL(file);
                       setValue("profile.avatar.url", url, { shouldDirty: true });
-                    }
-                  }}
-                  className="w-full text-sm"
-                />
+                    }}
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => avatarInputRef.current?.click()}
+                    className="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-gray-900 text-white text-sm font-medium hover:bg-black transition-colors"
+                  >
+                    <Upload size={16} />
+                    {watchedData.profile?.avatar?.url ? "Replace Avatar" : "Upload Avatar"}
+                  </button>
+                  {watchedData.profile?.avatar?.url && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setValue("profile.avatar.url", "", { shouldDirty: true });
+                        setAvatarFileName("");
+                        if (avatarInputRef.current) avatarInputRef.current.value = "";
+                      }}
+                      className="inline-flex items-center gap-2 px-3 py-2 rounded-md border text-sm font-medium text-gray-600 hover:text-red-600 hover:border-red-200 hover:bg-red-50 transition-colors"
+                    >
+                      <X size={16} />
+                      Remove
+                    </button>
+                  )}
+                </div>
+                <div className="text-xs text-gray-500">
+                  {avatarFileName ? avatarFileName : "PNG / JPG recommended. Square image looks best."}
+                </div>
               </div>
             </div>
             <div className="pt-2">
