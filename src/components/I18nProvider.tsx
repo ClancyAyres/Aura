@@ -12,24 +12,37 @@ type I18nContextValue = {
 
 const I18nContext = createContext<I18nContextValue | null>(null);
 
-function readStoredLocale(): LocaleKey {
-  if (typeof window === "undefined") return "en";
-  const raw = window.localStorage.getItem("locale");
-  if (raw === "zh" || raw === "en") return raw;
-  return "en";
+function readCookieLocale(): LocaleKey | null {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.match(/(?:^|;\s*)locale=(zh|en)(?:;|$)/);
+  if (!match) return null;
+  return match[1] as LocaleKey;
 }
 
-export function I18nProvider({ children }: { children: React.ReactNode }) {
-  const [locale, setLocaleState] = useState<LocaleKey>("en");
+function readStoredLocale(): LocaleKey | null {
+  if (typeof window === "undefined") return null;
+  const raw = window.localStorage.getItem("locale");
+  if (raw === "zh" || raw === "en") return raw;
+  return null;
+}
 
-  useEffect(() => {
-    setLocaleState(readStoredLocale());
-  }, []);
+export function I18nProvider({
+  children,
+  initialLocale,
+}: {
+  children: React.ReactNode;
+  initialLocale?: LocaleKey;
+}) {
+  const [locale, setLocaleState] = useState<LocaleKey>(() => {
+    return initialLocale ?? readCookieLocale() ?? readStoredLocale() ?? "en";
+  });
 
   const setLocale = useCallback((next: LocaleKey) => {
     setLocaleState(next);
     if (typeof window !== "undefined") {
       window.localStorage.setItem("locale", next);
+      document.cookie = `locale=${next}; path=/; max-age=31536000; samesite=lax`;
+      document.documentElement.lang = next;
       window.dispatchEvent(new CustomEvent("locale-change", { detail: next }));
     }
   }, []);
@@ -59,4 +72,3 @@ export function useI18n() {
   if (!ctx) throw new Error("useI18n must be used within I18nProvider");
   return ctx;
 }
-

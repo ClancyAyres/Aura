@@ -5,6 +5,7 @@ import { LayoutGrid, FileText, Settings, Sparkles, Wand2, GalleryVerticalEnd, Ta
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/components/I18nProvider";
 import type { I18nKey } from "@/lib/i18n";
+import { usePathname } from "next/navigation";
 
 type NavItem = { href: string; labelKey: I18nKey; Icon: any };
 
@@ -23,6 +24,7 @@ const EXT_ITEMS: NavItem[] = [
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { t } = useI18n();
+  const pathname = usePathname();
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="mx-auto max-w-7xl px-6 py-6">
@@ -43,9 +45,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <Link
                       key={href}
                       href={href}
-                      className={cn("flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-50")}
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                        pathname === href
+                          ? "bg-blue-50 text-blue-700"
+                          : "text-gray-700 hover:bg-gray-50"
+                      )}
                     >
-                      <Icon size={16} className="text-gray-400" />
+                      <Icon
+                        size={16}
+                        className={cn(pathname === href ? "text-blue-700" : "text-gray-400")}
+                      />
                       <span>{t(labelKey)}</span>
                     </Link>
                   ))}
@@ -59,9 +69,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <Link
                       key={href}
                       href={href}
-                      className={cn("flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-50")}
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                        pathname === href
+                          ? "bg-blue-50 text-blue-700"
+                          : "text-gray-700 hover:bg-gray-50"
+                      )}
                     >
-                      <Icon size={16} className="text-gray-400" />
+                      <Icon
+                        size={16}
+                        className={cn(pathname === href ? "text-blue-700" : "text-gray-400")}
+                      />
                       <span>{t(labelKey)}</span>
                     </Link>
                   ))}

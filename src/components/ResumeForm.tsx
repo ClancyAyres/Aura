@@ -10,6 +10,7 @@ import { type ReactNode, useEffect, useRef, useState } from "react";
 import * as YAML from "yaml";
 import ContactManager from "./ContactManager";
 import Avatar from "./Avatar";
+import { useI18n } from "@/components/I18nProvider";
 
 function FormSection({ 
   title, 
@@ -67,6 +68,7 @@ function SchoolAutocompleteInput({
   onValueChange: (val: string) => void;
   cacheRef: React.MutableRefObject<Map<string, string[]>>;
 }) {
+  const { t } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [options, setOptions] = useState<string[]>([]);
@@ -137,7 +139,7 @@ function SchoolAutocompleteInput({
             registerReturn.onBlur(e);
             window.setTimeout(() => setIsOpen(false), 120);
           }}
-          placeholder="Type to search, or enter your school"
+          placeholder={t("schoolPlaceholder")}
           className="w-full p-2 pr-9 border rounded text-sm focus:border-blue-500 outline-none"
           autoComplete="off"
         />
@@ -181,6 +183,7 @@ export default function ResumeForm({
   onTemplateChange?: (templateId: "classic" | "modern" | "compact") => void,
   currentTemplate?: string
 }) {
+  const { t } = useI18n();
   const [importMode, setImportMode] = useState<"form" | "json" | "yaml">("form");
   const [importText, setImportText] = useState("");
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -299,7 +302,7 @@ export default function ResumeForm({
   return (
     <div className="space-y-8 max-w-4xl mx-auto p-6">
       <div className="flex justify-between items-center sticky top-0 bg-white/80 backdrop-blur-md z-10 py-4 border-b">
-        <h1 className="text-2xl font-bold">Resume Editor</h1>
+        <h1 className="text-2xl font-bold">{t("resumeEditor")}</h1>
         <div className="flex gap-2">
           <div className="flex bg-gray-100 p-1 rounded-md mr-2">
             {(["classic", "modern", "compact"] as const).map((t) => (
@@ -320,21 +323,21 @@ export default function ResumeForm({
             className="px-4 py-2 border rounded hover:bg-gray-50 text-sm flex items-center gap-2"
           >
             <Layout size={16} />
-            {importMode === "form" ? "Import" : "Edit"}
+            {importMode === "form" ? t("import") : t("edit")}
           </button>
           <button
             onClick={handleSubmit(onSave)}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center gap-2 text-sm"
           >
             <Save size={16} />
-            Save
+            {t("save")}
           </button>
           <button
             onClick={() => window.print()}
             className="px-4 py-2 bg-gray-800 text-white rounded hover:bg-black flex items-center gap-2 text-sm"
           >
             <Plus size={16} className="rotate-45" />
-            PDF
+            {t("pdf")}
           </button>
         </div>
       </div>
@@ -365,17 +368,17 @@ export default function ResumeForm({
             onClick={handleImport}
             className="w-full py-2 bg-black text-white rounded hover:bg-gray-800"
           >
-            Load Data
+            {t("loadData")}
           </button>
         </div>
       ) : (
         <form className="space-y-12 pb-24">
           {/* Profile Section */}
           <section className="space-y-4">
-            <h2 className="text-xl font-semibold border-b pb-2">Profile</h2>
+            <h2 className="text-xl font-semibold border-b pb-2">{t("profile")}</h2>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-sm font-medium">Full Name</label>
+                <label className="text-sm font-medium">{t("fullName")}</label>
                 <input
                   {...register("profile.name")}
                   className="w-full p-2 border rounded focus:ring-1 focus:ring-blue-500 outline-none"
@@ -383,14 +386,14 @@ export default function ResumeForm({
                 {errors.profile?.name && <p className="text-red-500 text-xs">{errors.profile.name.message}</p>}
               </div>
               <div className="space-y-1">
-                <label className="text-sm font-medium">Job Title</label>
+                <label className="text-sm font-medium">{t("jobTitle")}</label>
                 <input
                   {...register("profile.title")}
                   className="w-full p-2 border rounded focus:ring-1 focus:ring-blue-500 outline-none"
                 />
               </div>
               <div className="space-y-2 col-span-2">
-                <label className="text-sm font-medium">Avatar</label>
+                <label className="text-sm font-medium">{t("avatar")}</label>
                 <div className="flex items-center gap-2">
                   <input
                     ref={avatarInputRef}
@@ -411,7 +414,7 @@ export default function ResumeForm({
                     className="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-gray-900 text-white text-sm font-medium hover:bg-black transition-colors"
                   >
                     <Upload size={16} />
-                    {watchedData.profile?.avatar?.url ? "Replace Avatar" : "Upload Avatar"}
+                    {watchedData.profile?.avatar?.url ? t("replaceAvatar") : t("uploadAvatar")}
                   </button>
                   {watchedData.profile?.avatar?.url && (
                     <button
@@ -424,12 +427,12 @@ export default function ResumeForm({
                       className="inline-flex items-center gap-2 px-3 py-2 rounded-md border text-sm font-medium text-gray-600 hover:text-red-600 hover:border-red-200 hover:bg-red-50 transition-colors"
                     >
                       <X size={16} />
-                      Remove
+                      {t("remove")}
                     </button>
                   )}
                 </div>
                 <div className="text-xs text-gray-500">
-                  {avatarFileName ? avatarFileName : "PNG / JPG recommended. Square image looks best."}
+                  {avatarFileName ? avatarFileName : t("avatarHint")}
                 </div>
               </div>
             </div>
@@ -444,25 +447,25 @@ export default function ResumeForm({
 
           {/* Summary Section */}
           <section className="space-y-4">
-            <h2 className="text-xl font-semibold border-b pb-2">Professional Summary</h2>
+            <h2 className="text-xl font-semibold border-b pb-2">{t("professionalSummary")}</h2>
             <textarea
               {...register("summary")}
               rows={4}
-              placeholder="A brief overview of your professional background and key achievements."
+              placeholder={t("summaryPlaceholder")}
               className="w-full p-2 border rounded focus:ring-1 focus:ring-blue-500 outline-none text-sm"
             />
           </section>
 
           {/* Experience Section */}
           <FormSection 
-            title="Experience" 
+            title={t("experience")} 
             action={
               <button
                 type="button"
                 onClick={() => appendExperience({ company: "", title: "", startDate: "", tech: [], description_raw: [] })}
                 className="text-blue-600 hover:text-blue-800 flex items-center gap-1 text-sm font-medium"
               >
-                <Plus size={16} /> Add Experience
+                <Plus size={16} /> {t("addExperience")}
               </button>
             }
           >
@@ -546,7 +549,7 @@ export default function ResumeForm({
                     )}
                   >
                     <Wand2 size={12} className={isOptimizing === index ? "animate-spin" : ""} />
-                    {isOptimizing === index ? "Optimizing..." : "Optimize with AI (STAR)"}
+                    {isOptimizing === index ? t("optimizing") : t("optimizeStar")}
                   </button>
                 </FieldCard>
               ))}
@@ -555,14 +558,14 @@ export default function ResumeForm({
 
           {/* Projects Section */}
           <FormSection 
-            title="Projects"
+            title={t("projects")}
             action={
               <button
                 type="button"
                 onClick={() => appendProject({ name: "", description_raw: [], tech: [] })}
                 className="text-blue-600 hover:text-blue-800 flex items-center gap-1 text-sm font-medium"
               >
-                <Plus size={16} /> Add Project
+                <Plus size={16} /> {t("addProject")}
               </button>
             }
           >
@@ -606,14 +609,14 @@ export default function ResumeForm({
 
           {/* Education Section */}
           <FormSection 
-            title="Education"
+            title={t("education")}
             action={
               <button
                 type="button"
                 onClick={() => appendEducation({ school: "", degree: "", startDate: "" })}
                 className="text-blue-600 hover:text-blue-800 flex items-center gap-1 text-sm font-medium"
               >
-                <Plus size={16} /> Add Education
+                <Plus size={16} /> {t("addEducation")}
               </button>
             }
           >
@@ -661,14 +664,14 @@ export default function ResumeForm({
 
           {/* Skills Section */}
           <FormSection 
-            title="Skills"
+            title={t("skills")}
             action={
               <button
                 type="button"
                 onClick={() => appendSkill({ name: "", level: "intermediate" })}
                 className="text-blue-600 hover:text-blue-800 flex items-center gap-1 text-sm font-medium"
               >
-                <Plus size={16} /> Add Skill
+                <Plus size={16} /> {t("addSkill")}
               </button>
             }
           >
